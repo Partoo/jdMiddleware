@@ -68,6 +68,7 @@ abstract class PublicHealthProxy
         // dd($crawler->html());
 
         $pages = $crawler->filter('#all')->attr('value');
+
         $count = 0; // 记录条数
         for ($i = 1; $i <= $pages; $i++) {
             $crawler = $this->client->request('POST', $this->url($start, $end, $i));
