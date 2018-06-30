@@ -42,13 +42,13 @@ abstract class PublicHealthProxy
         return $this->scrape($start);
     }
 
-    public function show()
-    {
-        $this->login();
-        $crawler = Goutte::request('POST', $this->url('2017-01-01'));
-        dd($crawler->html());
-        return $this->fetchArchive(request('fn'), request('id'));
-    }
+//    public function show()
+//    {
+//        $this->login();
+//        $crawler = Goutte::request('POST', $this->url('2017-01-01'));
+//        dd($crawler->html());
+//        return $this->fetchArchive(request('fn'), request('id'));
+//    }
 
     /**
      * 依次抓取患者病例
@@ -103,7 +103,7 @@ abstract class PublicHealthProxy
         // 基本资料抓取
         $attempt = 0;
         $base = null;
-        $crawler = Goutte::request('GET', $url);
+        $crawler = $this->client->request('GET', $url);
         // dd($crawler->html());
         do {
             try {
@@ -307,7 +307,7 @@ abstract class PublicHealthProxy
     private function getCnMedicine($pid)
     {
         $url = config('publicHealth.rootUrl') . 'lnr/zyytzgl/viewAll.action?dah=' . $pid;
-        $crawler = Goutte::request('GET', $url);
+        $crawler = $this->client->request('GET', $url);
         $base = $crawler->filter('#table2');
         $str = $this->clean($base->filter('tr')->eq(3)->text());
         preg_match('/\d{4}/', $str, $date);
