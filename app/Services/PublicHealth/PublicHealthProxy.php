@@ -4,8 +4,8 @@ namespace App\Services\PublicHealth;
 
 use App\Mail\PublicHealthPostFeedback;
 use App\Services\GetPostToken;
-use Goutte;
 use GuzzleHttp\Client;
+use Goutte\Client as Goutte;
 use Illuminate\Support\Facades\Mail;
 
 /**
@@ -23,16 +23,19 @@ abstract class PublicHealthProxy
     public function __construct()
     {
         $this->params = $this->getParams();
+        $this->client = new Goutte();
     }
+
     /**
      * 由子类指定不同的url参数
      * @return $this->params
      */
     abstract public function getParams();
+
     /**
      * 获取某时间段的数据
      * @param  string $start 开始时间
-     * @param  string $end   结束时间
+     * @param  string $end 结束时间
      */
     public function period($start)
     {
@@ -54,19 +57,20 @@ abstract class PublicHealthProxy
      * 第三步：将病例入库
      * 第四步：重复第二步，直至本页结束
      * @param  [type] $start
-     * @param  string $end   [description]
+     * @param  string $end [description]
      * @return [type]        [description]
      */
     private function scrape($start, $end = '')
     {
         $this->login();
-        $crawler = Goutte::request('POST', $this->url($start, $end));
+        $crawler = $this->client->request('POST', $this->url($start, $end));
+//        $crawler = Goutte::request('POST', $this->url($start, $end));
         // dd($crawler->html());
 
         $pages = $crawler->filter('#all')->attr('value');
         $count = 0; // 记录条数
         for ($i = 1; $i <= $pages; $i++) {
-            $crawler = Goutte::request('POST', $this->url($start, $end, $i));
+            $crawler = $this->client->request('POST', $this->url($start, $end, $i));
             echo '共有' . $pages . '页,正在抓取第' . $i . "页\n";
             $crawler->filter('.QueryTable tr')->siblings()->each(function ($tr) use (&$count, $crawler) {
                 $link = $crawler->selectLink($tr->filter('td')->eq(1)->text())->link()->getUri();
@@ -78,12 +82,12 @@ abstract class PublicHealthProxy
                     $count++;
                 } else {
                     echo $final->data . "\n";
-                    Mail::to(env('ADMIN_EMAIL'))->send(new PublicHealthPostFeedback(['time' => date('Y-m-d H:i:s'), 'content' => $final->data]));
+//                    Mail::to(env('ADMIN_EMAIL'))->send(new PublicHealthPostFeedback(['time' => date('Y-m-d H:i:s'), 'content' => $final->data]));
                     exit;
                 }
             });
         }
-        Mail::to(env('ADMIN_EMAIL'))->send(new PublicHealthPostFeedback(['time' => date('Y-m-d H:i:s'), 'content' => '成功写入' . $count . '条记录']));
+//        Mail::to(env('ADMIN_EMAIL'))->send(new PublicHealthPostFeedback(['time' => date('Y-m-d H:i:s'), 'content' => '成功写入' . $count . '条记录']));
         unset($count);
     }
 
@@ -102,8 +106,7 @@ abstract class PublicHealthProxy
         $crawler = Goutte::request('GET', $url);
         // dd($crawler->html());
         do {
-            try
-            {
+            try {
                 $crawler->filter('#table2')->text();
             } catch (\InvalidArgumentException $e) {
                 $attempt++;
@@ -175,9 +178,9 @@ abstract class PublicHealthProxy
             'hgb' => '血红蛋白',
             'wbc' => '白细胞',
             'plt' => '血小板',
-            'hcy' => '同型半胱氨酸',
+//            'hcy' => '同型半胱氨酸',
             'afp' => 'AFP甲胎蛋白',
-            'cea' => 'CEA癌胚抗原',
+//            'cea' => 'CEA癌胚抗原',
             'fbg' => '空腹血糖',
             'ecg' => '心电图',
             'alt' => '血清谷丙转氨酶',
@@ -289,11 +292,11 @@ abstract class PublicHealthProxy
     private function login()
     {
         $url = config('publicHealth.rootUrl') . 'login.action';
-        $crawler = Goutte::request('GET', $url);
+        $crawler = $this->client->request('GET', $url);
         $form = $crawler->filter('#loginForm')->form();
-        $crawler = Goutte::submit($form, array('loginname' => config('publicHealth.username'), 'password' => config('publicHealth.password')));
-        $this->cookies = Goutte::getCookieJar()->all();
-        Goutte::getCookieJar()->updateFromSetCookie($this->cookies);
+        $crawler = $this->client->submit($form, array('loginname' => config('publicHealth.username'), 'password' => config('publicHealth.password')));
+        $this->cookies = $this->client->getCookieJar()->all();
+        $this->client->getCookieJar()->updateFromSetCookie($this->cookies);
     }
 
     private function clean($string)
