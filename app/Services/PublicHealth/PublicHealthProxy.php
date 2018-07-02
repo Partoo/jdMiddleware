@@ -180,7 +180,7 @@ abstract class PublicHealthProxy
             'wbc' => '白细胞',
             'plt' => '血小板',
 //            'hcy' => '同型半胱氨酸',
-            'afp' => 'AFP甲胎蛋白',
+//            'afp' => 'AFP甲胎蛋白',
 //            'cea' => 'CEA癌胚抗原',
             'fbg' => '空腹血糖',
             'ecg' => '心电图',
@@ -190,7 +190,7 @@ abstract class PublicHealthProxy
             'scr' => '血清肌酐',
             'bun' => '血尿素氮',
             'rut' => '尿常规',
-            'ua' => '尿酸',
+//            'ua' => '尿酸',
             'tcho' => '总胆固醇',
             'trig' => '甘油三酯',
             'ldl' => '血清低密度脂蛋白胆固醇',
@@ -210,9 +210,10 @@ abstract class PublicHealthProxy
             if ($keyword == '健康评价') {
                 preg_match_all('/异常1(.*)?(\s+.*){3}/', $archiveInfo, $match);
                 $archive[$key] = trim(preg_replace('/\s+/', '', array_first($match[0])));
-            } else if ($keyword == 'AFP甲胎蛋白' || $keyword == 'CEA癌胚抗原') {
-                $archive[$key] = $this->pickCancerData($keyword, $archiveInfo);
             }
+//            else if ($keyword == 'AFP甲胎蛋白' || $keyword == 'CEA癌胚抗原') {
+//                $archive[$key] = $this->pickCancerData($keyword, $archiveInfo);
+//            }
             // else if ($keyword == '空腹血糖') {
             //     $archive[$key] = $this->pickFbgData($keyword, $archiveInfo);
             // }
